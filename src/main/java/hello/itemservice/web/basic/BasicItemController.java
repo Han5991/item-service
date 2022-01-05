@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
@@ -64,11 +65,26 @@ public class BasicItemController {
         return "basic/item";
     }
 
-    @PostMapping("/add")
+    //@PostMapping("/add")
     public String save2(@ModelAttribute Item item){
-        itemRepository.save(item);
+        Item newItem = itemRepository.save(item);
+        Long itemId = newItem.getId();
         //model.addAttribute("item", item); //자동 추가 지우면 클래스명을 앞에만 소문자로 바꿔서 등록
-        return "basic/item";
+        return "redirect:/basic/items/"+itemId;
+    }
+
+    //@PostMapping("/add")
+    public String save3(Item item){
+        itemRepository.save(item);
+        return "redirect:/basic/items/"+item.getId();
+    }
+
+    @PostMapping("/add")
+    public String save4(Item item, RedirectAttributes redirectAttributes){
+        Item save = itemRepository.save(item);
+        redirectAttributes.addAttribute("itemId", save.getId());
+        redirectAttributes.addAttribute("status", true);
+        return "redirect:/basic/items/{itemId}";
     }
 
     @GetMapping("{itemId}/edit")
@@ -82,5 +98,13 @@ public class BasicItemController {
     public String edit(@PathVariable Long itemId, @ModelAttribute("item") Item item){
         itemRepository.update(itemId, item);
         return "redirect:/basic/items/{itemId}";
+    }
+
+    @GetMapping ("{itemId}/delete")
+    public String edit(@PathVariable Long itemId, Model model){
+        itemRepository.delete(itemId);
+        List<Item> items = itemRepository.findAll();
+        model.addAttribute("items", items);
+        return "basic/items";
     }
 }
